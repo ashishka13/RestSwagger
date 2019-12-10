@@ -1,0 +1,241 @@
+{
+  "consumes": [
+    "application/json",
+    "application/xml"
+  ],
+  "produces": [
+    "application/json",
+    "application/xml"
+  ],
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "swagger": "2.0",
+  "info": {
+    "title": "Movie API.",
+    "version": "0.0.1"
+  },
+  "host": "localhost:12345",
+  "paths": {
+    "/movie": {
+      "post": {
+        "description": "Adds new movie to the database\ncould be any movie",
+        "consumes": [
+          "application/json",
+          "application/xml"
+        ],
+        "produces": [
+          "application/xml",
+          "application/json"
+        ],
+        "operationId": "CreateMovie",
+        "parameters": [
+          {
+            "description": "The movie to create.",
+            "name": "movie",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Movie"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Movie succesfully created."
+          }
+        }
+      }
+    },
+    "/movie/{name}": {
+      "get": {
+        "description": "Returns the movie from the database which user has requested\nCould be any movie",
+        "produces": [
+          "application/json",
+          "application/xml",
+          "text/xml",
+          "text/html"
+        ],
+        "operationId": "GetMovie",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "name",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "movie response",
+            "schema": {
+              "$ref": "#/definitions/Movie"
+            }
+          },
+          "default": {
+            "description": "unexpected error"
+          }
+        }
+      },
+      "put": {
+        "description": "Updates a movie from the database\ncould be any movie",
+        "consumes": [
+          "application/json",
+          "application/xml"
+        ],
+        "produces": [
+          "application/xml",
+          "application/json"
+        ],
+        "operationId": "UpdateMovie",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The movie to update.",
+            "name": "name",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "movie",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Movie"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Movie succesfully created."
+          }
+        }
+      },
+      "delete": {
+        "description": "Delete a movie from the database\ncould be any movie",
+        "consumes": [
+          "application/json",
+          "application/xml"
+        ],
+        "produces": [
+          "application/xml",
+          "application/json"
+        ],
+        "operationId": "DeleteMovie",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The movie to be deleted.",
+            "name": "name",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Movie succesfully deleted."
+          }
+        }
+      },
+      "patch": {
+        "description": "Updates a movie from the database with patch\ncould be any movie",
+        "consumes": [
+          "application/json",
+          "application/xml"
+        ],
+        "produces": [
+          "application/xml",
+          "application/json"
+        ],
+        "operationId": "UpdateMovie",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The movie to update patch.",
+            "name": "name",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "movie",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Movie"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Movie succesfully created."
+          }
+        }
+      }
+    },
+    "/movies": {
+      "get": {
+        "description": "Returns the movies from the database\nList of all movies",
+        "produces": [
+          "application/json",
+          "application/xml",
+          "text/xml",
+          "text/html"
+        ],
+        "operationId": "GetMovies",
+        "responses": {
+          "200": {
+            "description": "movie response",
+            "schema": {
+              "$ref": "#/definitions/Movie"
+            }
+          },
+          "default": {
+            "description": "unexpected error"
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "Movie": {
+      "description": "Movie this movie model",
+      "type": "object",
+      "required": [
+        "name",
+        "budget",
+        "director"
+      ],
+      "properties": {
+        "budget": {
+          "description": "the budget for this user",
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "Budget"
+        },
+        "director": {
+          "description": "the director for this user",
+          "type": "string",
+          "x-go-name": "Director"
+        },
+        "name": {
+          "description": "the name for this user",
+          "type": "string",
+          "x-go-name": "Name"
+        }
+      },
+      "x-go-package": "RestSwagger/model"
+    }
+  },
+  "x-meta-array": [
+    "value1",
+    "value2"
+  ],
+  "x-meta-array-obj": [
+    {
+      "name": "obj",
+      "value": "field"
+    }
+  ],
+  "x-meta-value": "value"
+}
