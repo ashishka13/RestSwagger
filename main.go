@@ -31,8 +31,9 @@ import (
 
 func main() {
 
-	// fs := http.FileServer(http.Dir("./RestSwagger"))
-	// http.Handle("/RestSwagger/", http.StripPrefix("/RestSwagger/", fs))
+	fs := http.FileServer(http.Dir("./RestSwagger"))
+	http.Handle("/RestSwagger/", http.StripPrefix("/RestSwagger/", fs))
+
 	// fs := http.FileServer(http.Dir("./RestSwagger/"))
 	// controller.UserRouter().PathPrefix("/RestSwagger/").Handler(http.StripPrefix("/RestSwagger/", fs))
 

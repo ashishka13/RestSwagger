@@ -12,23 +12,24 @@ import (
 
 var movies []model.Movie
 
+var InsDberror, AllDbErr bool = false, false
+
 //CreateMovie create new record
 func CreateMovie(response http.ResponseWriter, request *http.Request) {
 	// swagger:operation POST /movie CreateMovie
 	// Adds new movie to the database
-	// could be any movie
 	// ---
 	// consumes:
 	// - application/json
 	// - application/xml
 	// produces:
-	// - application/xml
 	// - application/json
+	// - application/xml
 	// parameters:
 	//   - name: movie
 	//     in: body
 	//     required: true
-	//     description: The movie to create.
+	//     description: The movie to be created.
 	//     schema:
 	//       $ref: '#/definitions/Movie'
 	// responses:
@@ -40,24 +41,32 @@ func CreateMovie(response http.ResponseWriter, request *http.Request) {
 	}
 	response.Header().Set("content-type", "application/json")
 	response.Header().Set("Access-Control-Allow-Origin", "*")
+
 	session, _ := mgo.Dial("localhost:27017") //establish connection
 	defer session.Close()                     //close it in defer
 	c := session.DB("ashish").C("plaza")      //create new database and collection
-	var movie model.Movie
-	_ = json.NewDecoder(request.Body).Decode(&movie)
 
-	if movie.Name == "" || request.ContentLength == 0 {
+	var movie model.Movie
+	decodeErr := json.NewDecoder(request.Body).Decode(&movie)
+
+	if decodeErr != nil {
+		fmt.Print("JSON Decode problem ")
+		response.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	if movie.Name == "" || movie.Budget == 0 || movie.Director == "" || request.ContentLength == 0 {
 		fmt.Print("cannot send empty data")
-		response.WriteHeader(http.StatusNotAcceptable)
+		response.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
 	errIns := c.Insert(movie) //actual insert query
-	if errIns != nil {
-		response.WriteHeader(http.StatusNotAcceptable)
-	} else {
-		response.WriteHeader(http.StatusOK)
+	if errIns != nil || InsDberror {
+		response.WriteHeader(http.StatusInternalServerError)
+		return
 	}
+	response.WriteHeader(http.StatusOK)
 	json.NewEncoder(response).Encode(movie)
 }
 
@@ -65,13 +74,10 @@ func CreateMovie(response http.ResponseWriter, request *http.Request) {
 func GetMovie(response http.ResponseWriter, request *http.Request) {
 	// swagger:operation GET /movie/{name} GetMovie
 	// Returns the movie from the database which user has requested
-	// Could be any movie
 	// ---
 	// produces:
 	// - application/json
 	// - application/xml
-	// - text/xml
-	// - text/html
 	// parameters:
 	// - name: name
 	//   in: path
@@ -86,21 +92,24 @@ func GetMovie(response http.ResponseWriter, request *http.Request) {
 	//    description: unexpected error
 	response.Header().Set("content-type", "application/json")
 	response.Header().Set("Access-Control-Allow-Origin", "*")
+
 	session, _ := mgo.Dial("localhost:27017") //establish connection
 	defer session.Close()                     //close it in defer
 	c := session.DB("ashish").C("plaza")
+
 	params := mux.Vars(request)
-	result := model.Movie{}
 
 	query := c.Find(bson.M{"name": params["name"]})
+
+	result := model.Movie{}
 	err := query.One(&result)
 	if err != nil {
 		fmt.Println(err)
 		response.WriteHeader(http.StatusNotFound)
 		return
 	}
-
 	fmt.Println(result)
+
 	response.WriteHeader(http.StatusOK)
 	json.NewEncoder(response).Encode(result)
 }
@@ -108,14 +117,11 @@ func GetMovie(response http.ResponseWriter, request *http.Request) {
 //GetMovies select all movies
 func GetMovies(response http.ResponseWriter, request *http.Request) {
 	// swagger:operation GET /movies GetMovies
-	// Returns the movies from the database
-	// List of all movies
+	// Returns all the movies from the database
 	// ---
 	// produces:
 	// - application/json
 	// - application/xml
-	// - text/xml
-	// - text/html
 	// responses:
 	//   '200':
 	//     description: movie response
@@ -123,23 +129,28 @@ func GetMovies(response http.ResponseWriter, request *http.Request) {
 	//       $ref: "#/definitions/Movie"
 	//   default:
 	//    description: unexpected error
-	fmt.Printf("%v", request.Header.Get("content-type"))
 	response.Header().Set("content-type", "application/json")
 	response.Header().Set("Access-Control-Allow-Origin", "*")
+
 	session, _ := mgo.Dial("localhost:27017") //establish connection
 	defer session.Close()                     //close it in defer
-
 	c := session.DB("ashish").C("plaza")
-	var results []model.Movie
 
 	query := c.Find(bson.M{})
-	query.All(&results)
+	var results []model.Movie
+	err := query.All(&results)
+	if err != nil || AllDbErr {
+		fmt.Print("Database query problem")
+		response.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
 	arr := []model.Movie{}
 	for _, value := range results {
-		// fmt.Println(value,err)
 		arr = append(arr, value)
 	}
+
+	response.WriteHeader(http.StatusOK)
 	json.NewEncoder(response).Encode(arr)
 }
 
@@ -147,20 +158,19 @@ func GetMovies(response http.ResponseWriter, request *http.Request) {
 func UpdateMovie(response http.ResponseWriter, request *http.Request) {
 	// swagger:operation PUT /movie/{name} UpdateMovie
 	// Updates a movie from the database
-	// could be any movie
 	// ---
 	// consumes:
 	// - application/json
 	// - application/xml
 	// produces:
-	// - application/xml
 	// - application/json
+	// - application/xml
 	// parameters:
 	// - name: name
 	//   in: path
 	//   required: true
 	//   type: string
-	//   description: The movie to update.
+	//   description: The movie to be updated.
 	// - name: movie
 	//   in: body
 	//   required: true
@@ -172,10 +182,16 @@ func UpdateMovie(response http.ResponseWriter, request *http.Request) {
 	session, _ := mgo.Dial("localhost:27017") //establish connection
 	defer session.Close()                     //close it in defer
 	c := session.DB("ashish").C("plaza")
-	var movie model.Movie
-	params := mux.Vars(request)
 
-	_ = json.NewDecoder(request.Body).Decode(&movie) //this returns error
+	params := mux.Vars(request)
+	var movie model.Movie
+
+	decodeErr := json.NewDecoder(request.Body).Decode(&movie) //this returns error
+	if decodeErr != nil {
+		fmt.Print("JSON decode problem")
+		response.WriteHeader(http.StatusNotAcceptable)
+		return
+	}
 
 	what := bson.M{"name": params["name"]}
 	change := bson.M{
@@ -185,33 +201,33 @@ func UpdateMovie(response http.ResponseWriter, request *http.Request) {
 	}
 
 	err := c.Update(what, change)
-	if err == nil {
-		response.WriteHeader(http.StatusOK)
-	} else if err != nil {
+	if err != nil {
 		response.WriteHeader(http.StatusNotAcceptable)
 		fmt.Println(err)
 		return
 	}
+
+	response.WriteHeader(http.StatusOK)
+	json.NewEncoder(response).Encode(movie)
 }
 
 //UpdateMoviePatch update one movie only with patch
 func UpdateMoviePatch(response http.ResponseWriter, request *http.Request) {
 	// swagger:operation PATCH /movie/{name} UpdateMovie
 	// Updates a movie from the database with patch
-	// could be any movie
 	// ---
 	// consumes:
 	// - application/json
 	// - application/xml
 	// produces:
-	// - application/xml
 	// - application/json
+	// - application/xml
 	// parameters:
 	// - name: name
 	//   in: path
 	//   required: true
 	//   type: string
-	//   description: The movie to update patch.
+	//   description: The movie to be updated with patch.
 	// - name: movie
 	//   in: body
 	//   required: true
@@ -223,10 +239,16 @@ func UpdateMoviePatch(response http.ResponseWriter, request *http.Request) {
 	session, _ := mgo.Dial("localhost:27017") //establish connection
 	defer session.Close()                     //close it in defer
 	c := session.DB("ashish").C("plaza")
-	var movie model.Movie
-	params := mux.Vars(request)
 
-	_ = json.NewDecoder(request.Body).Decode(&movie) //this returns error
+	params := mux.Vars(request)
+	var movie model.Movie
+
+	decodeErr := json.NewDecoder(request.Body).Decode(&movie) //this returns error
+	if decodeErr != nil {
+		fmt.Print("JSON decode problem")
+		response.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
 	what := bson.M{"name": params["name"]}
 	change := bson.M{
@@ -236,27 +258,26 @@ func UpdateMoviePatch(response http.ResponseWriter, request *http.Request) {
 	}
 
 	err := c.Update(what, change)
-	if err == nil {
-		response.WriteHeader(http.StatusOK)
-	} else if err != nil {
+	if err != nil {
 		response.WriteHeader(http.StatusNotAcceptable)
 		fmt.Println(err)
 		return
 	}
+	response.WriteHeader(http.StatusOK)
+	json.NewEncoder(response).Encode(movie)
 }
 
 //DeleteMovie delete one movie
 func DeleteMovie(response http.ResponseWriter, request *http.Request) {
 	// swagger:operation DELETE /movie/{name} DeleteMovie
 	// Delete a movie from the database
-	// could be any movie
 	// ---
 	// consumes:
 	// - application/json
 	// - application/xml
 	// produces:
-	// - application/xml
 	// - application/json
+	// - application/xml
 	// parameters:
 	// - name: name
 	//   in: path
@@ -269,20 +290,19 @@ func DeleteMovie(response http.ResponseWriter, request *http.Request) {
 	//     description: Movie succesfully deleted.
 	session, _ := mgo.Dial("localhost:27017") //establish connection
 	defer session.Close()                     //close it in defer
-
 	c := session.DB("ashish").C("plaza")
+
 	params := mux.Vars(request)
 
 	what := bson.M{"name": params["name"]}
-	err := c.Remove(what)
 
-	if err == nil {
-		response.WriteHeader(http.StatusOK)
-	} else if err != nil {
+	err := c.Remove(what)
+	if err != nil {
 		response.WriteHeader(http.StatusNotFound)
 		fmt.Println("ashish", err)
 		return
 	}
+	response.WriteHeader(http.StatusOK)
 }
 
 //UserRouter all the router related functionalities

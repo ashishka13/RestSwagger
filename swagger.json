@@ -20,19 +20,19 @@
   "paths": {
     "/movie": {
       "post": {
-        "description": "Adds new movie to the database\ncould be any movie",
+        "description": "Adds new movie to the database",
         "consumes": [
           "application/json",
           "application/xml"
         ],
         "produces": [
-          "application/xml",
-          "application/json"
+          "application/json",
+          "application/xml"
         ],
         "operationId": "CreateMovie",
         "parameters": [
           {
-            "description": "The movie to create.",
+            "description": "The movie to be created.",
             "name": "movie",
             "in": "body",
             "required": true,
@@ -50,12 +50,10 @@
     },
     "/movie/{name}": {
       "get": {
-        "description": "Returns the movie from the database which user has requested\nCould be any movie",
+        "description": "Returns the movie from the database which user has requested",
         "produces": [
           "application/json",
-          "application/xml",
-          "text/xml",
-          "text/html"
+          "application/xml"
         ],
         "operationId": "GetMovie",
         "parameters": [
@@ -79,20 +77,20 @@
         }
       },
       "put": {
-        "description": "Updates a movie from the database\ncould be any movie",
+        "description": "Updates a movie from the database",
         "consumes": [
           "application/json",
           "application/xml"
         ],
         "produces": [
-          "application/xml",
-          "application/json"
+          "application/json",
+          "application/xml"
         ],
         "operationId": "UpdateMovie",
         "parameters": [
           {
             "type": "string",
-            "description": "The movie to update.",
+            "description": "The movie to be updated.",
             "name": "name",
             "in": "path",
             "required": true
@@ -113,14 +111,14 @@
         }
       },
       "delete": {
-        "description": "Delete a movie from the database\ncould be any movie",
+        "description": "Delete a movie from the database",
         "consumes": [
           "application/json",
           "application/xml"
         ],
         "produces": [
-          "application/xml",
-          "application/json"
+          "application/json",
+          "application/xml"
         ],
         "operationId": "DeleteMovie",
         "parameters": [
@@ -139,20 +137,20 @@
         }
       },
       "patch": {
-        "description": "Updates a movie from the database with patch\ncould be any movie",
+        "description": "Updates a movie from the database with patch",
         "consumes": [
           "application/json",
           "application/xml"
         ],
         "produces": [
-          "application/xml",
-          "application/json"
+          "application/json",
+          "application/xml"
         ],
         "operationId": "UpdateMovie",
         "parameters": [
           {
             "type": "string",
-            "description": "The movie to update patch.",
+            "description": "The movie to be updated with patch.",
             "name": "name",
             "in": "path",
             "required": true
@@ -175,12 +173,10 @@
     },
     "/movies": {
       "get": {
-        "description": "Returns the movies from the database\nList of all movies",
+        "description": "Returns all the movies from the database",
         "produces": [
           "application/json",
-          "application/xml",
-          "text/xml",
-          "text/html"
+          "application/xml"
         ],
         "operationId": "GetMovies",
         "responses": {

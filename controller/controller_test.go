@@ -12,9 +12,36 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
+//check flags of test command
 func TestCreateMovie(t *testing.T) {
 
-	var jsonStr = []byte(` {"name": "ashishashish" , "budget":456789 , "director":"karmarkar"}`)
+	var jsonStr = []byte(` {"name": "ssss" , "budget":456789 , "director":"drax"}`)
+
+	request, err := http.NewRequest("POST", "/movie", bytes.NewBuffer(jsonStr))
+	if err != nil {
+		t.Fatal(err)
+	}
+	request.Header.Set("content-type", "application/json")
+
+	session, _ := mgo.Dial("localhost:27017") //establish connection
+	c := session.DB("ashish").C("plaza")      //create new database and collection
+	beforeCount, _ := c.Find(bson.M{}).Count()
+
+	response := httptest.NewRecorder()
+	UserRouter().ServeHTTP(response, request)
+	afterCount, _ := c.Find(bson.M{}).Count()
+
+	fmt.Println(beforeCount, afterCount)
+
+	if beforeCount == afterCount {
+		t.Errorf("handler returned %v, %v", beforeCount, afterCount)
+	}
+}
+
+func TestCreateMovieDbErr(t *testing.T) {
+
+	InsDberror = true
+	var jsonStr = []byte(` {"name": "ssss" , "budget":456789 , "director":"drax"}`)
 
 	session, _ := mgo.Dial("localhost:27017") //establish connection
 	c := session.DB("ashish").C("plaza")      //create new database and collection
@@ -30,13 +57,15 @@ func TestCreateMovie(t *testing.T) {
 	afterCount, _ := c.Find(bson.M{}).Count()
 
 	fmt.Println(beforeCount, afterCount)
+	cod := response.Code
 
-	if beforeCount == afterCount {
-		t.Errorf("handler returned %v, %v", beforeCount, afterCount)
+	if cod != 500 {
+		t.Errorf("Expecting database error but not getting error \n entries before%v, entries after %v", beforeCount, afterCount)
 	}
+
 }
 
-func TestCreateMovieWithErr(t *testing.T) {
+func TestCreateMovieTypeErr(t *testing.T) {
 	var jsonStr = []byte(` {"name": "type mismatch" , "budget":456789 , "director":"karmarkar"}`)
 
 	request, err := http.NewRequest("POST", "/movie", bytes.NewBuffer(jsonStr))
@@ -44,7 +73,7 @@ func TestCreateMovieWithErr(t *testing.T) {
 
 	session, _ := mgo.Dial("localhost:27017") //establish connection
 	c := session.DB("ashish").C("plaza")      //create new database and collection
-	beforeCount, _ := c.Find(bson.M{}).Count()
+	beforeCount, err := c.Find(bson.M{}).Count()
 
 	if err != nil {
 		t.Fatal(err)
@@ -58,17 +87,45 @@ func TestCreateMovieWithErr(t *testing.T) {
 	if beforeCount != afterCount {
 		t.Errorf("expecting error not getting error  %v, %v", beforeCount, afterCount)
 	}
+	// defer Dberror = false
 }
 
-func TestCreateMovieWithDataErr(t *testing.T) {
+func TestCreateMovieWithJsonErr(t *testing.T) {
+	var jsonStr = []byte(` {q2w34er5t6y7u89i90o0-p}`)
 
-	var jsonStr = []byte(`{"name":""}`)
+	request, err := http.NewRequest("POST", "/movie", bytes.NewBuffer(jsonStr))
+	request.Header.Set("content-type", "application/json")
+
+	session, _ := mgo.Dial("localhost:27017") //establish connection
+	c := session.DB("ashish").C("plaza")      //create new database and collection
+	beforeCount, err := c.Find(bson.M{}).Count()
+
+	if err != nil {
+		t.Fatal(err)
+	}
+	response := httptest.NewRecorder()
+	UserRouter().ServeHTTP(response, request)
+	afterCount, _ := c.Find(bson.M{}).Count()
+
+	fmt.Println(beforeCount, afterCount)
+	cod := response.Code
+	if cod != 500 {
+		t.Errorf("expecting error not getting error  %v, %v", beforeCount, afterCount)
+	}
+
+}
+
+func TestCreateMovieWithNoData1(t *testing.T) {
+
+	var jsonStr = []byte(`{}`)
 
 	session, _ := mgo.Dial("localhost:27017") //establish connection
 	c := session.DB("ashish").C("plaza")      //create new database and collection
 	beforeCount, _ := c.Find(bson.M{}).Count()
 
 	request, err := http.NewRequest("POST", "/movie", bytes.NewBuffer(jsonStr))
+	request.Header.Set("content-type", "application/json")
+
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -78,12 +135,50 @@ func TestCreateMovieWithDataErr(t *testing.T) {
 
 	fmt.Println(beforeCount, afterCount)
 
-	if beforeCount != afterCount {
-		t.Errorf("expecting error not getting it %v, %v", beforeCount, afterCount)
+	cod := response.Code
+	if cod != 400 {
+		t.Errorf("expecting error not getting error  %v, %v", beforeCount, afterCount)
+	}
+}
+
+func TestCreateMovieWithNoData2(t *testing.T) {
+	var jsonStr = []byte(` {"name": "" , "budget":0 , "director":""}`)
+
+	request, err := http.NewRequest("POST", "/movie", bytes.NewBuffer(jsonStr))
+	request.Header.Set("content-type", "application/json")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	session, _ := mgo.Dial("localhost:27017") //establish connection
+	c := session.DB("ashish").C("plaza")      //create new database and collection
+	beforeCount, _ := c.Find(bson.M{}).Count()
+
+	response := httptest.NewRecorder()
+	UserRouter().ServeHTTP(response, request)
+	afterCount, _ := c.Find(bson.M{}).Count()
+
+	fmt.Println(beforeCount, afterCount)
+
+	cod := response.Code
+
+	if cod != 400 {
+		t.Errorf("expecting error not getting error  %v, %v", beforeCount, afterCount)
 	}
 }
 
 func TestGetMovies(t *testing.T) {
+	request, err := http.NewRequest("GET", "/movies", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	response := httptest.NewRecorder()
+	UserRouter().ServeHTTP(response, request)
+	assert.NotEqual(t, 404, response.Code)
+}
+
+func TestGetMoviesWithErr(t *testing.T) {
+	AllDbErr = true
 	request, err := http.NewRequest("GET", "/movies", nil)
 	if err != nil {
 		t.Fatal(err)
@@ -122,7 +217,7 @@ func TestGetMovieWithErr(t *testing.T) {
 }
 
 func TestDeleteMovie(t *testing.T) {
-	request, err := http.NewRequest("DELETE", "/movie/ashishashish", nil)
+	request, err := http.NewRequest("DELETE", "/movie/ssss", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -185,6 +280,24 @@ func TestUpdateMovieWithError(t *testing.T) {
 	}
 }
 
+func TestUpdateMovieWithJsonError(t *testing.T) {
+
+	var updateStr = []byte(` {"q2w34er5t6y7u89i90o0"}`)
+
+	request, err := http.NewRequest("PUT", "/movie/Tfitanic", bytes.NewBuffer(updateStr))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	response := httptest.NewRecorder()
+	UserRouter().ServeHTTP(response, request)
+	fmt.Println(response.Code)
+
+	if response.Code != 406 {
+		t.Error("Expecting error but not getting")
+	}
+}
+
 func TestUpdatePatch(t *testing.T) {
 
 	var updateStr = []byte(` {"budget":456789 , "director":"Bruice wills"}`)
@@ -217,6 +330,24 @@ func TestUpdatePatchWithError(t *testing.T) {
 	fmt.Println(response.Code)
 
 	if response.Code != 406 {
+		t.Error("Expecting error but not getting")
+	}
+}
+
+func TestUpdatePatchWithJsonError(t *testing.T) {
+
+	var updateStr = []byte(` {"123e45t67uyuio"}`)
+
+	request, err := http.NewRequest("PATCH", "/movie/Tfitanic", bytes.NewBuffer(updateStr))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	response := httptest.NewRecorder()
+	UserRouter().ServeHTTP(response, request)
+	fmt.Println(response.Code)
+
+	if response.Code != 500 {
 		t.Error("Expecting error but not getting")
 	}
 }
