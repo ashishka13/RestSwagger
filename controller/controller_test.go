@@ -12,10 +12,14 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
+func changeVal(variable bool) {
+	variable = false
+}
+
 //check flags of test command
 func TestCreateMovie(t *testing.T) {
 
-	var jsonStr = []byte(` {"name": "ssss" , "budget":456789 , "director":"drax"}`)
+	var jsonStr = []byte(` {"uid":"3", "name": "ssss" , "budget":456789 , "director":"drax"}`)
 
 	request, err := http.NewRequest("POST", "/movie", bytes.NewBuffer(jsonStr))
 	if err != nil {
@@ -40,8 +44,8 @@ func TestCreateMovie(t *testing.T) {
 
 func TestCreateMovieDbErr(t *testing.T) {
 
-	InsDberror = true
-	var jsonStr = []byte(` {"name": "ssss" , "budget":456789 , "director":"drax"}`)
+	InsDberror = true		//make it false on purpose, this is referred in controller again
+	var jsonStr = []byte(` {"uid":"t3", "name": "ssss" , "budget":456789 , "director":"drax"}`)
 
 	session, _ := mgo.Dial("localhost:27017") //establish connection
 	c := session.DB("ashish").C("plaza")      //create new database and collection
@@ -62,11 +66,11 @@ func TestCreateMovieDbErr(t *testing.T) {
 	if cod != 500 {
 		t.Errorf("Expecting database error but not getting error \n entries before%v, entries after %v", beforeCount, afterCount)
 	}
-
+	defer changeVal(AllDbErr)
 }
 
 func TestCreateMovieTypeErr(t *testing.T) {
-	var jsonStr = []byte(` {"name": "type mismatch" , "budget":456789 , "director":"karmarkar"}`)
+	var jsonStr = []byte(` {"uid":"r4","name": "type mismatch" , "budget":456789 , "director":"karmarkar"}`)
 
 	request, err := http.NewRequest("POST", "/movie", bytes.NewBuffer(jsonStr))
 	request.Header.Set("content-type", "application/javascript")
@@ -142,7 +146,7 @@ func TestCreateMovieWithNoData1(t *testing.T) {
 }
 
 func TestCreateMovieWithNoData2(t *testing.T) {
-	var jsonStr = []byte(` {"name": "" , "budget":0 , "director":""}`)
+	var jsonStr = []byte(` {"id":"", "name": "" , "budget":0 , "director":""}`)
 
 	request, err := http.NewRequest("POST", "/movie", bytes.NewBuffer(jsonStr))
 	request.Header.Set("content-type", "application/json")
@@ -186,10 +190,12 @@ func TestGetMoviesWithErr(t *testing.T) {
 	response := httptest.NewRecorder()
 	UserRouter().ServeHTTP(response, request)
 	assert.NotEqual(t, 404, response.Code)
+
+	defer changeVal(AllDbErr)
 }
 
 func TestGetMovie(t *testing.T) {
-	request, err := http.NewRequest("GET", "/movie/ssss", nil)
+	request, err := http.NewRequest("GET", "/movie/4", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -217,7 +223,7 @@ func TestGetMovieWithErr(t *testing.T) {
 }
 
 func TestDeleteMovie(t *testing.T) {
-	request, err := http.NewRequest("DELETE", "/movie/ssss", nil)
+	request, err := http.NewRequest("DELETE", "/movie/3", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -248,7 +254,7 @@ func TestUpdateMovie(t *testing.T) {
 
 	var updateStr = []byte(` {"budget":456789 , "director":"Bruice wills"}`)
 
-	request, err := http.NewRequest("PUT", "/movie/Titanic", bytes.NewBuffer(updateStr))
+	request, err := http.NewRequest("PUT", "/movie/t1", bytes.NewBuffer(updateStr))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -266,7 +272,7 @@ func TestUpdateMovieWithError(t *testing.T) {
 
 	var updateStr = []byte(` {"budget":456789 , "director":"Bruice wills"}`)
 
-	request, err := http.NewRequest("PUT", "/movie/Tfitanic", bytes.NewBuffer(updateStr))
+	request, err := http.NewRequest("PUT", "/movie/w2w2w", bytes.NewBuffer(updateStr))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -282,9 +288,9 @@ func TestUpdateMovieWithError(t *testing.T) {
 
 func TestUpdateMovieWithJsonError(t *testing.T) {
 
-	var updateStr = []byte(` {"q2w34er5t6y7u89i90o0"}`)
+	var updateStr = []byte(` {"q2w3 # @ !4ey7u  ^ * $ )89i0"}`)
 
-	request, err := http.NewRequest("PUT", "/movie/Tfitanic", bytes.NewBuffer(updateStr))
+	request, err := http.NewRequest("PUT", "/movie/r5r5r", bytes.NewBuffer(updateStr))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -300,9 +306,9 @@ func TestUpdateMovieWithJsonError(t *testing.T) {
 
 func TestUpdatePatch(t *testing.T) {
 
-	var updateStr = []byte(` {"budget":456789 , "director":"Bruice wills"}`)
+	var updateStr = []byte(` {"name":"same", "budget":456789 , "director":"Bruice wills"}`)
 
-	request, err := http.NewRequest("PATCH", "/movie/Titanic", bytes.NewBuffer(updateStr))
+	request, err := http.NewRequest("PATCH", "/movie/t3", bytes.NewBuffer(updateStr))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -320,7 +326,7 @@ func TestUpdatePatchWithError(t *testing.T) {
 
 	var updateStr = []byte(` {"budget":456789 , "director":"Bruice wills"}`)
 
-	request, err := http.NewRequest("PATCH", "/movie/Tfitanic", bytes.NewBuffer(updateStr))
+	request, err := http.NewRequest("PATCH", "/movie/e54e54e", bytes.NewBuffer(updateStr))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -336,9 +342,9 @@ func TestUpdatePatchWithError(t *testing.T) {
 
 func TestUpdatePatchWithJsonError(t *testing.T) {
 
-	var updateStr = []byte(` {"123e45t67uyuio"}`)
+	var updateStr = []byte(` {"q2w3 # @ !4ey7u  ^ * $ )89i0"}`)
 
-	request, err := http.NewRequest("PATCH", "/movie/Tfitanic", bytes.NewBuffer(updateStr))
+	request, err := http.NewRequest("PATCH", "/movie/t2", bytes.NewBuffer(updateStr))
 	if err != nil {
 		t.Fatal(err)
 	}

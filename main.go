@@ -31,16 +31,14 @@ import (
 
 func main() {
 
-	fs := http.FileServer(http.Dir("./RestSwagger"))
-	http.Handle("/RestSwagger/", http.StripPrefix("/RestSwagger/", fs))
-
-	// fs := http.FileServer(http.Dir("./RestSwagger/"))
-	// controller.UserRouter().PathPrefix("/RestSwagger/").Handler(http.StripPrefix("/RestSwagger/", fs))
-
 	fmt.Printf("\nStarting server...\n")
 	headers := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"})
 	methods := handlers.AllowedMethods([]string{"GET", "PUT", "POST", "DELETE", "PATCH", "OPTIONS", "HEAD"})
 	origins := handlers.AllowedOrigins([]string{"*"})
+
+	sh := http.StripPrefix("/swaggerui/", http.FileServer(http.Dir("./swaggerui/")))
+	controller.UserRouter().PathPrefix("/swaggerui/").Handler(sh)
+
 	http.ListenAndServe(":12345", handlers.CORS(headers, methods, origins)(controller.UserRouter()))
 }
 

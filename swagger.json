@@ -198,7 +198,6 @@
       "description": "Movie this movie model",
       "type": "object",
       "required": [
-        "name",
         "budget",
         "director"
       ],
@@ -215,7 +214,6 @@
           "x-go-name": "Director"
         },
         "name": {
-          "description": "the name for this user",
           "type": "string",
           "x-go-name": "Name"
         }
