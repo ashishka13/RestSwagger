@@ -3,9 +3,9 @@ package model
 //Movie this movie model
 // swagger:model Movie
 type Movie struct {
-	// the Uid for this user
+	// the uid for this user
 	// required: true
-	Uid string `bson:"uid,omitempty" json:"uid"`
+	UID string `bson:"uid,omitempty" json:"uid"`
 	// the name for this user
 	// required: true
 	Name string `bson:"name,omitempty" json:"name"`

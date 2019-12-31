@@ -25,19 +25,17 @@ package main
 import (
 	"RestSwagger/controller"
 	"fmt"
-	"github.com/gorilla/handlers"
 	"net/http"
+
+	"github.com/gorilla/handlers"
 )
 
 func main() {
+	fmt.Printf("\nStarting server localhost:12345...\n")
 
-	fmt.Printf("\nStarting server...\n")
 	headers := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"})
 	methods := handlers.AllowedMethods([]string{"GET", "PUT", "POST", "DELETE", "PATCH", "OPTIONS", "HEAD"})
 	origins := handlers.AllowedOrigins([]string{"*"})
-
-	sh := http.StripPrefix("/swaggerui/", http.FileServer(http.Dir("./swaggerui/")))
-	controller.UserRouter().PathPrefix("/swaggerui/").Handler(sh)
 
 	http.ListenAndServe(":12345", handlers.CORS(headers, methods, origins)(controller.UserRouter()))
 }

@@ -16,6 +16,16 @@ func changeVal(variable bool) {
 	variable = false
 }
 
+func TestHomepage(t *testing.T) {
+	request, err := http.NewRequest("GET", "/", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	response := httptest.NewRecorder()
+	UserRouter().ServeHTTP(response, request)
+	assert.NotEqual(t, 404, response.Code)
+}
+
 //check flags of test command
 func TestCreateMovie(t *testing.T) {
 
@@ -44,7 +54,7 @@ func TestCreateMovie(t *testing.T) {
 
 func TestCreateMovieDbErr(t *testing.T) {
 
-	InsDberror = true		//make it false on purpose, this is referred in controller again
+	InsDberror = true //make it false on purpose, this is referred in controller again
 	var jsonStr = []byte(` {"uid":"t3", "name": "ssss" , "budget":456789 , "director":"drax"}`)
 
 	session, _ := mgo.Dial("localhost:27017") //establish connection
@@ -195,12 +205,12 @@ func TestGetMoviesWithErr(t *testing.T) {
 }
 
 func TestGetMovie(t *testing.T) {
-	request, err := http.NewRequest("GET", "/movie/4", nil)
+	request, err := http.NewRequest("GET", "/movie/4", nil) //url written in browser
 	if err != nil {
 		t.Fatal(err)
 	}
-	response := httptest.NewRecorder()
-	UserRouter().ServeHTTP(response, request)
+	response := httptest.NewRecorder()        //"Enter" button created to be pressed
+	UserRouter().ServeHTTP(response, request) //"enter" pressed
 	fmt.Println(response.Code)
 
 	if response.Code == 404 {
@@ -254,7 +264,7 @@ func TestUpdateMovie(t *testing.T) {
 
 	var updateStr = []byte(` {"budget":456789 , "director":"Bruice wills"}`)
 
-	request, err := http.NewRequest("PUT", "/movie/t1", bytes.NewBuffer(updateStr))
+	request, err := http.NewRequest("PUT", "/movie/1", bytes.NewBuffer(updateStr))
 	if err != nil {
 		t.Fatal(err)
 	}

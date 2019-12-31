@@ -20,7 +20,7 @@
   "paths": {
     "/movie": {
       "post": {
-        "description": "Adds new movie to the database",
+        "description": "Add A mov to the database",
         "consumes": [
           "application/json",
           "application/xml"
@@ -48,18 +48,17 @@
         }
       }
     },
-    "/movie/{name}": {
+    "/movie/{uid}": {
       "get": {
         "description": "Returns the movie from the database which user has requested",
         "produces": [
           "application/json",
           "application/xml"
         ],
-        "operationId": "GetMovie",
+        "operationId": "GetMovieByID",
         "parameters": [
           {
-            "type": "string",
-            "name": "name",
+            "name": "uid",
             "in": "path",
             "required": true
           }
@@ -91,7 +90,7 @@
           {
             "type": "string",
             "description": "The movie to be updated.",
-            "name": "name",
+            "name": "uid",
             "in": "path",
             "required": true
           },
@@ -125,7 +124,7 @@
           {
             "type": "string",
             "description": "The movie to be deleted.",
-            "name": "name",
+            "name": "uid",
             "in": "path",
             "required": true
           }
@@ -151,7 +150,7 @@
           {
             "type": "string",
             "description": "The movie to be updated with patch.",
-            "name": "name",
+            "name": "uid",
             "in": "path",
             "required": true
           },
@@ -198,6 +197,7 @@
       "description": "Movie this movie model",
       "type": "object",
       "required": [
+        "uid",
         "name",
         "budget",
         "director"
@@ -218,6 +218,11 @@
           "description": "the name for this user",
           "type": "string",
           "x-go-name": "Name"
+        },
+        "uid": {
+          "description": "the uid for this user",
+          "type": "string",
+          "x-go-name": "UID"
         }
       },
       "x-go-package": "RestSwagger/model"
